@@ -1,19 +1,15 @@
-# README
+# pInk - Conversor
+ 
+![versão](https://img.shields.io/badge/versão-1.0.0-e78fde?style=round-square)
+ 
+---
+ 
+pInk - Conversor é uma aplicação desktop para converter arquivos de quadrinhos `.cbr` (RAR) para `.cbz` (ZIP). Selecione uma pasta, escolha suas opções e acompanhe a conversão em tempo real.
+ 
+## Pré-requisitos
+ 
+Para extrair os arquivos RAR, o sistema precisa ter **unrar** ou **7z** instalado e disponível no PATH.
 
-## About
-
-This is the official Wails React-TS template.
-
-You can configure the project by editing `wails.json`. More information about the project settings can be found
-here: https://wails.io/docs/reference/project-config
-
-## Live Development
-
-To run in live development mode, run `wails dev` in the project directory. This will run a Vite development
-server that will provide very fast hot reload of your frontend changes. If you want to develop in a browser
-and have access to your Go methods, there is also a dev server that runs on http://localhost:34115. Connect
-to this in your browser, and you can call your Go code from devtools.
-
-## Building
-
-To build a redistributable, production mode package, use `wails build`.
+## Download
+ 
+Acesse a página de [Releases](https://github.com/pinkcomics/converter/releases) e baixe o executável.
