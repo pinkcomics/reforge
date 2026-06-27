@@ -140,7 +140,7 @@ export default function App() {
   return (
     <div className="app">
       <header className="app-header">
-        <h1 className="app-title">pInk | Conversor</h1>
+        <h1 className="app-title">pInk - converter</h1>
       </header>
 
       {extractorOk === false && (
