@@ -16,7 +16,7 @@ func main() {
 	app := NewApp()
 
 	err := wails.Run(&options.App{
-		Title:  "pInk | Conversor",
+		Title:  "pInk - converter",
 		Width:  760,
 		Height: 680,
 		AssetServer: &assetserver.Options{
