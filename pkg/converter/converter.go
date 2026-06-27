@@ -12,13 +12,10 @@ import (
 	"strings"
 )
 
-// CheckExtractor verifica se unrar ou 7z estão disponíveis no sistema.
-// Retorna false se nenhum extrator for encontrado.
 func CheckExtractor() bool {
 	return hasCommand("unrar") || hasCommand("7z")
 }
 
-// Convert extrai o arquivo RAR/CBR em source e reempacota como CBZ em dest.
 func Convert(source, dest string) error {
 	tmpDir, err := os.MkdirTemp("", "cbr2cbz-*")
 	if err != nil {
@@ -38,7 +35,6 @@ func Convert(source, dest string) error {
 	return createCBZ(dest, tmpDir, files)
 }
 
-// CopyFile copia src para dst preservando o conteúdo byte a byte.
 func CopyFile(src, dst string) error {
 	in, err := os.Open(src)
 	if err != nil {
@@ -58,8 +54,6 @@ func CopyFile(src, dst string) error {
 
 	return out.Sync()
 }
-
-// --- helpers internos ---
 
 func extractRAR(source, dest string) error {
 	var cmd *exec.Cmd

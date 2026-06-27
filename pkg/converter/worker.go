@@ -10,9 +10,6 @@ import (
 
 const outputDir = "zipped"
 
-// Run executa a conversão completa com base em cfg.
-// Os eventos de progresso são emitidos no canal progress (pode ser nil).
-// Fechar o canal ao terminar é responsabilidade desta função.
 func Run(cfg Config, progress chan<- ProgressEvent) error {
 	scan, err := ScanArchives(cfg.WorkDir)
 	if err != nil {
@@ -40,7 +37,6 @@ func Run(cfg Config, progress chan<- ProgressEvent) error {
 		go runWorker(jobs, results, &wg)
 	}
 
-	// Enfileira conversões CBR → CBZ
 	for _, cbr := range scan.CBRFiles {
 		name := strings.TrimSuffix(filepath.Base(cbr), ".cbr") + ".cbz"
 		jobs <- Job{
@@ -50,7 +46,6 @@ func Run(cfg Config, progress chan<- ProgressEvent) error {
 		}
 	}
 
-	// Enfileira cópias de CBZ existentes
 	for _, cbz := range scan.CBZFiles {
 		jobs <- Job{
 			Source: cbz,
@@ -66,7 +61,6 @@ func Run(cfg Config, progress chan<- ProgressEvent) error {
 		close(results)
 	}()
 
-	// Consome resultados e emite eventos de progresso
 	for res := range results {
 		if !res.Success {
 			if progress != nil {
@@ -109,7 +103,6 @@ func Run(cfg Config, progress chan<- ProgressEvent) error {
 	return nil
 }
 
-// runWorker processa jobs do canal e envia resultados.
 func runWorker(jobs <-chan Job, results chan<- Result, wg *sync.WaitGroup) {
 	defer wg.Done()
 

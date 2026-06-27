@@ -6,9 +6,6 @@ import (
 	"strings"
 )
 
-// ScanArchives lê a pasta workDir e retorna os .cbr e .cbz encontrados.
-// Apenas o nível superficial (não recursivo) é varrido, mantendo o
-// comportamento original do CLI.
 func ScanArchives(workDir string) (ScanResult, error) {
 	entries, err := os.ReadDir(workDir)
 	if err != nil {
