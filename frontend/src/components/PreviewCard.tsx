@@ -1,4 +1,3 @@
-// frontend/src/components/PreviewCard.tsx
 interface ScanData {
   cbrCount: number;
   cbzCount: number;

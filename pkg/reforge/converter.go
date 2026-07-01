@@ -1,8 +1,9 @@
-package converter
+package reforge
 
 import (
 	"archive/zip"
 	"bytes"
+	"context"
 	"fmt"
 	"io"
 	"os"
@@ -16,14 +17,18 @@ func CheckExtractor() bool {
 	return hasCommand("unrar") || hasCommand("7z")
 }
 
-func Convert(source, dest string) error {
+func Convert(ctx context.Context, source, dest string) error {
+	if err := ctx.Err(); err != nil {
+		return err
+	}
+
 	tmpDir, err := os.MkdirTemp("", "cbr2cbz-*")
 	if err != nil {
 		return err
 	}
 	defer os.RemoveAll(tmpDir)
 
-	if err := extractRAR(source, tmpDir); err != nil {
+	if err := extractRAR(ctx, source, tmpDir); err != nil {
 		return err
 	}
 
@@ -55,13 +60,13 @@ func CopyFile(src, dst string) error {
 	return out.Sync()
 }
 
-func extractRAR(source, dest string) error {
+func extractRAR(ctx context.Context, source, dest string) error {
 	var cmd *exec.Cmd
 
 	if hasCommand("unrar") {
-		cmd = exec.Command("unrar", "x", "-inul", source, dest)
+		cmd = exec.CommandContext(ctx, "unrar", "x", "-inul", source, dest)
 	} else {
-		cmd = exec.Command("7z", "x", source, "-o"+dest, "-y")
+		cmd = exec.CommandContext(ctx, "7z", "x", source, "-o"+dest, "-y")
 	}
 
 	var stderr bytes.Buffer

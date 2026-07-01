@@ -3,8 +3,11 @@ import { EventsOn } from "../wailsjs/runtime/runtime";
 import {
   ScanFolder,
   StartConversion,
+  CancelConversion,
   SelectFolder,
   CheckExtractor,
+  GetSettings,
+  SaveSettings,
 } from "../wailsjs/go/main/App";
 
 import FileSelector from "./components/FileSelector";
@@ -12,6 +15,7 @@ import PreviewCard from "./components/PreviewCard";
 import OptionsCard from "./components/OptionsCard";
 import ProgressCard from "./components/ProgressCard";
 import LogCard from "./components/LogCard";
+import ResultCard from "./components/ResultCard";
 
 import "./App.css";
 
@@ -19,6 +23,16 @@ export interface LogEntry {
   id: number;
   status: "converting" | "done" | "kept" | "error" | "info";
   message: string;
+}
+
+export interface Summary {
+  total: number;
+  converted: number;
+  kept: number;
+  failed: number;
+  cancelled: boolean;
+  elapsedMs: number;
+  elapsedText: string;
 }
 
 interface ScanData {
@@ -41,10 +55,43 @@ export default function App() {
   const [progress, setProgress] = useState({ current: 0, total: 0 });
   const [log, setLog] = useState<LogEntry[]>([]);
   const [extractorOk, setExtractorOk] = useState<boolean | null>(null);
+  const [summary, setSummary] = useState<Summary | null>(null);
+  const [settingsLoaded, setSettingsLoaded] = useState(false);
 
   useEffect(() => {
     CheckExtractor().then(setExtractorOk);
   }, []);
+
+  useEffect(() => {
+    GetSettings()
+      .then((s) => {
+        setReplace(!!s?.replace);
+      })
+      .finally(() => setSettingsLoaded(true));
+  }, []);
+
+  useEffect(() => {
+    if (!settingsLoaded) return;
+    SaveSettings({ replace });
+  }, [replace, settingsLoaded]);
+
+  const addLog = useCallback((status: LogEntry["status"], message: string) => {
+    setLog((prev) => [...prev, { id: ++logIdSeq, status, message }]);
+  }, []);
+
+  const applyScan = useCallback(
+    (dir: string, result: ScanData) => {
+      setFolder(dir);
+      setScan(result);
+      setDone(false);
+      setSummary(null);
+      setLog([]);
+      if (result.error) {
+        addLog("error", `Erro ao escanear: ${result.error}`);
+      }
+    },
+    [addLog],
+  );
 
   useEffect(() => {
     const offs = [
@@ -62,57 +109,56 @@ export default function App() {
       EventsOn("progress:error", (data: { file: string; error: string }) => {
         addLog("error", `✗ ${data.file || "erro"}: ${data.error}`);
       }),
-      EventsOn("progress:finished", () => {
+      EventsOn("progress:finished", (data: Summary) => {
         setRunning(false);
         setDone(true);
-        addLog("info", "✔ Conversão finalizada!");
+        setSummary(data);
+        addLog(
+          "info",
+          data?.cancelled
+            ? "⏹ Conversão cancelada."
+            : "✔ Conversão finalizada!",
+        );
       }),
     ];
 
     return () => offs.forEach((off) => off && off());
-  }, []);
-
-  const addLog = (status: LogEntry["status"], message: string) => {
-    setLog((prev) => [...prev, { id: ++logIdSeq, status, message }]);
-  };
+  }, [addLog, applyScan]);
 
   const handleSelectFolder = useCallback(async () => {
     const dir = await SelectFolder();
     if (!dir) return;
 
-    setFolder(dir);
-    setDone(false);
-    setLog([]);
-
     const result = await ScanFolder(dir);
-    setScan(result);
+    applyScan(dir, result);
+  }, [applyScan]);
 
-    if (result.error) {
-      addLog("error", `Erro ao escanear: ${result.error}`);
-    }
-  }, []);
+  const handleFolderChange = useCallback(
+    async (value: string) => {
+      setFolder(value);
+      setDone(false);
+      setScan(null);
+      setSummary(null);
+      setLog([]);
 
-  const handleFolderChange = useCallback(async (value: string) => {
-    setFolder(value);
-    setDone(false);
-    setScan(null);
-    setLog([]);
+      if (!value.trim()) return;
 
-    if (!value.trim()) return;
+      const result = await ScanFolder(value.trim());
+      setScan(result);
 
-    const result = await ScanFolder(value.trim());
-    setScan(result);
-
-    if (result.error) {
-      addLog("error", `Erro ao escanear: ${result.error}`);
-    }
-  }, []);
+      if (result.error) {
+        addLog("error", `Erro ao escanear: ${result.error}`);
+      }
+    },
+    [addLog],
+  );
 
   const handleClear = () => {
     setFolder("");
     setScan(null);
     setLog([]);
     setDone(false);
+    setSummary(null);
     setProgress({ current: 0, total: 0 });
   };
 
@@ -123,6 +169,7 @@ export default function App() {
     setProgress({ current: 0, total });
     setLog([]);
     setDone(false);
+    setSummary(null);
     setRunning(true);
 
     addLog("info", `Iniciando conversão de ${total} arquivo(s)…`);
@@ -134,13 +181,25 @@ export default function App() {
     }
   };
 
+  const handleCancel = async () => {
+    addLog("info", "Cancelando conversão…");
+    await CancelConversion();
+  };
+
+  const handleNewRun = () => {
+    setDone(false);
+    setSummary(null);
+    setLog([]);
+    setProgress({ current: 0, total: 0 });
+  };
+
   const hasFiles = scan && (scan.cbrCount > 0 || scan.cbzCount > 0);
   const canStart = !!folder && hasFiles && !running && extractorOk !== false;
 
   return (
     <div className="app">
       <header className="app-header">
-        <h1 className="app-title">pInk - converter</h1>
+        <h1 className="app-title">pInk - reforge</h1>
       </header>
 
       {extractorOk === false && (
@@ -168,13 +227,24 @@ export default function App() {
           disabled={running}
         />
 
-        <button
-          className="btn-start"
-          onClick={handleStart}
-          disabled={!canStart}
-        >
-          {running ? "Convertendo…" : "Converter"}
-        </button>
+        {!running && (
+          <button
+            className="btn-start"
+            onClick={handleStart}
+            disabled={!canStart}
+          >
+            Iniciar conversão
+          </button>
+        )}
+
+        {running && (
+          <button
+            className="btn-start btn-start--cancel"
+            onClick={handleCancel}
+          >
+            Cancelar conversão
+          </button>
+        )}
 
         {(running || done || log.length > 0) && (
           <>
@@ -185,6 +255,10 @@ export default function App() {
             />
             <LogCard entries={log} />
           </>
+        )}
+
+        {done && summary && (
+          <ResultCard summary={summary} onNewRun={handleNewRun} />
         )}
       </main>
     </div>
