@@ -23,3 +23,20 @@ export namespace main {
 
 }
 
+export namespace reforge {
+	
+	export class Settings {
+	    replace: boolean;
+	
+	    static createFrom(source: any = {}) {
+	        return new Settings(source);
+	    }
+	
+	    constructor(source: any = {}) {
+	        if ('string' === typeof source) source = JSON.parse(source);
+	        this.replace = source["replace"];
+	    }
+	}
+
+}
+

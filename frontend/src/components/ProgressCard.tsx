@@ -1,4 +1,3 @@
-// frontend/src/components/ProgressCard.tsx
 interface Props {
   current: number;
   total: number;
@@ -15,11 +14,14 @@ export default function ProgressCard({ current, total, done }: Props) {
         <div className="progress__bar" style={{ width: `${pct}%` }} />
       </div>
       <div className="progress__label">
-        <span>{current} / {total} arquivos</span>
-        {done
-          ? <span className="progress__done">Concluído ✓</span>
-          : <span>{pct}%</span>
-        }
+        <span>
+          {current} / {total} arquivos
+        </span>
+        {done ? (
+          <span className="progress__done">Concluído ✓</span>
+        ) : (
+          <span>{pct}%</span>
+        )}
       </div>
     </div>
   );

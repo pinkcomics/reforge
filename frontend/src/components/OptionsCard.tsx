@@ -17,18 +17,6 @@ export default function OptionsCard({
     <div className="card">
       <p className="card-title">Opções</p>
       <div className="options__list">
-        {/*<label className="options__item">
-          <input
-            type="checkbox"
-            checked={skip}
-            disabled={disabled}
-            onChange={(e) => onSkipChange(e.target.checked)}
-          />
-          <div>
-            <div className="options__label">Pular preview e confirmação</div>
-          </div>
-        </label>*/}
-
         <label className="options__item">
           <input
             type="checkbox"

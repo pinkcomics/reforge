@@ -1,6 +1,7 @@
-package converter
+package reforge
 
 import (
+	"context"
 	"os"
 	"path/filepath"
 	"runtime"
@@ -10,7 +11,7 @@ import (
 
 const outputDir = "zipped"
 
-func Run(cfg Config, progress chan<- ProgressEvent) error {
+func Run(ctx context.Context, cfg Config, progress chan<- ProgressEvent) error {
 	scan, err := ScanArchives(cfg.WorkDir)
 	if err != nil {
 		return err
@@ -34,7 +35,7 @@ func Run(cfg Config, progress chan<- ProgressEvent) error {
 
 	for i := 0; i < workers; i++ {
 		wg.Add(1)
-		go runWorker(jobs, results, &wg)
+		go runWorker(ctx, jobs, results, progress, &wg)
 	}
 
 	for _, cbr := range scan.CBRFiles {
@@ -103,15 +104,35 @@ func Run(cfg Config, progress chan<- ProgressEvent) error {
 	return nil
 }
 
-func runWorker(jobs <-chan Job, results chan<- Result, wg *sync.WaitGroup) {
+func runWorker(ctx context.Context, jobs <-chan Job, results chan<- Result, progress chan<- ProgressEvent, wg *sync.WaitGroup) {
 	defer wg.Done()
 
 	for job := range jobs {
+		select {
+		case <-ctx.Done():
+			results <- Result{
+				Type:    job.Type,
+				Source:  job.Source,
+				Dest:    job.Dest,
+				Success: false,
+				Error:   ctx.Err(),
+			}
+			continue
+		default:
+		}
+
+		if progress != nil {
+			progress <- ProgressEvent{
+				Status: "converting",
+				File:   filepath.Base(job.Source),
+			}
+		}
+
 		var err error
 
 		switch job.Type {
 		case JobConvert:
-			err = Convert(job.Source, job.Dest)
+			err = Convert(ctx, job.Source, job.Dest)
 		case JobCopy:
 			err = CopyFile(job.Source, job.Dest)
 		}

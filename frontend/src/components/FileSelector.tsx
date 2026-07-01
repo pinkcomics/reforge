@@ -14,6 +14,7 @@ export default function FileSelector({
   return (
     <div className="card">
       <p className="card-title">Selecionar Pasta</p>
+
       <div className="file-selector__row">
         <input
           className="file-selector__input"
