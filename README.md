@@ -12,11 +12,11 @@
  ░░░░░                                                                                      ░░░░░░
 ```
 
-![versão](https://img.shields.io/badge/versão-1.1.0-e78fde?style=round-square)
+![versão](https://img.shields.io/badge/versão-1.2.0-e78fde?style=round-square)
 
 ## Visão Geral
 
-pInk - reforge é um aplicativo desktop que converte arquivos `.cbr` para `.cbz`.
+pInk - reforge converte arquivos `.cbr` para `.cbz`.
 
 ## Funcionalidades
 
