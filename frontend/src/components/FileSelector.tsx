@@ -19,7 +19,7 @@ export default function FileSelector({
         <input
           className="file-selector__input"
           type="text"
-          placeholder="/caminho/para/pasta"
+          placeholder="Nenhuma pasta selecionada"
           value={folder}
           onChange={(e) => onChange(e.target.value)}
           spellCheck={false}

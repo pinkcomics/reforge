@@ -25,7 +25,7 @@ export default function OptionsCard({
             onChange={(e) => onReplaceChange(e.target.checked)}
           />
           <div>
-            <div className="options__label">Remover CBRs após conversão</div>
+            <div className="options__label">Substituir arquivos originais</div>
           </div>
         </label>
       </div>

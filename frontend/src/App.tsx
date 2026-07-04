@@ -195,11 +195,13 @@ export default function App() {
 
   const hasFiles = scan && (scan.cbrCount > 0 || scan.cbzCount > 0);
   const canStart = !!folder && hasFiles && !running && extractorOk !== false;
+  const showWorkflow = !!folder && scan !== null;
 
   return (
     <div className="app">
       <header className="app-header">
         <h1 className="app-title">pInk - reforge</h1>
+        <p className="app-subtitle">Conversor de arquivos .cbr para .cbz.</p>
       </header>
 
       {extractorOk === false && (
@@ -217,33 +219,37 @@ export default function App() {
           onClear={handleClear}
         />
 
-        <PreviewCard scan={scan} />
+        {showWorkflow && (
+          <>
+            <PreviewCard scan={scan} />
 
-        <OptionsCard
-          skip={skip}
-          replace={replace}
-          onSkipChange={setSkip}
-          onReplaceChange={setReplace}
-          disabled={running}
-        />
+            <OptionsCard
+              skip={skip}
+              replace={replace}
+              onSkipChange={setSkip}
+              onReplaceChange={setReplace}
+              disabled={running}
+            />
 
-        {!running && (
-          <button
-            className="btn-start"
-            onClick={handleStart}
-            disabled={!canStart}
-          >
-            Iniciar conversão
-          </button>
-        )}
+            {!running && (
+              <button
+                className="btn-start"
+                onClick={handleStart}
+                disabled={!canStart}
+              >
+                Iniciar conversão
+              </button>
+            )}
 
-        {running && (
-          <button
-            className="btn-start btn-start--cancel"
-            onClick={handleCancel}
-          >
-            Cancelar conversão
-          </button>
+            {running && (
+              <button
+                className="btn-start btn-start--cancel"
+                onClick={handleCancel}
+              >
+                Cancelar conversão
+              </button>
+            )}
+          </>
         )}
 
         {(running || done || log.length > 0) && (
